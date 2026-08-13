@@ -18,12 +18,12 @@ export default function Trips() {
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:8000/api/users/${userId}/bookings`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/users/${userId}/bookings`)
       .then(res => res.json())
       .then(async data => {
         const populatedBookings = await Promise.all(data.map(async (b: any) => {
           try {
-            const listRes = await fetch(`http://127.0.0.1:8000/api/listings/${b.listing_id}`);
+            const listRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/listings/${b.listing_id}`);
             const listing = await listRes.json();
             return { ...b, listing };
           } catch {
@@ -45,7 +45,7 @@ export default function Trips() {
 
     setSubmittingReview(true);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/listings/${reviewBooking.listing_id}/reviews`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/listings/${reviewBooking.listing_id}/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

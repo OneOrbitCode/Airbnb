@@ -323,7 +323,7 @@ function HomeContent() {
 
   useEffect(() => {
     setLoading(true);
-    let url = "http://127.0.0.1:8000/api/listings?";
+    let url = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/listings?`;
     if (location) url += `location=${encodeURIComponent(location)}&`;
     if (category && category !== "All") url += `category=${encodeURIComponent(category)}&`;
 

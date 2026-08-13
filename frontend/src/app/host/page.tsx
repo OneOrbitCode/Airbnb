@@ -38,7 +38,7 @@ export default function HostDashboard() {
 
   const fetchListings = () => {
     setLoading(true);
-    fetch(`http://127.0.0.1:8000/api/users/${hostId}/listings`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/users/${hostId}/listings`)
       .then(res => res.json())
       .then(data => {
         setListings(Array.isArray(data) ? data : []);
@@ -51,7 +51,7 @@ export default function HostDashboard() {
   };
 
   const fetchHostBookings = () => {
-    fetch(`http://127.0.0.1:8000/api/hosts/${hostId}/bookings`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/hosts/${hostId}/bookings`)
       .then(res => res.json())
       .then(data => {
         setHostBookings(Array.isArray(data) ? data : []);
@@ -76,7 +76,7 @@ export default function HostDashboard() {
       const data = new FormData();
       data.append("file", file);
 
-      const res = await fetch("http://127.0.0.1:8000/api/upload", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/upload`, {
         method: "POST",
         body: data,
       });
@@ -125,7 +125,7 @@ export default function HostDashboard() {
         price: formData.price_per_night.toString(), 
         host_id: hostId 
       };
-      const url = view === "edit" ? `http://127.0.0.1:8000/api/listings/${formData.id}` : "http://127.0.0.1:8000/api/listings";
+      const url = view === "edit" ? `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/listings/${formData.id}` : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/listings`;
       const method = view === "edit" ? "PUT" : "POST";
       
       const response = await fetch(url, {
@@ -152,7 +152,7 @@ export default function HostDashboard() {
 
   const handleDelete = async (id: number) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/listings/${id}`, { method: "DELETE" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/listings/${id}`, { method: "DELETE" });
       if (res.ok) {
         setListings(listings.filter(l => l.id !== id));
         setNoticeMessage("Listing removed.");
