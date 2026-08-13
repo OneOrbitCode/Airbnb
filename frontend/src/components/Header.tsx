@@ -1,119 +1,477 @@
-import React from 'react';
+"use client";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useTheme } from "@/components/ThemeProvider";
+import { useAuth } from "@/components/AuthContext";
 
-export default function Header() {
+const POPULAR_DESTINATIONS = [
+  { name: "Varanasi", state: "Uttar Pradesh", icon: "🏛️" },
+  { name: "Jaipur", state: "Rajasthan", icon: "🏰" },
+  { name: "Goa", state: "West Coast", icon: "🏖️" },
+  { name: "Manali", state: "Himachal Pradesh", icon: "🏔️" },
+  { name: "Lonavala", state: "Maharashtra", icon: "🏊" },
+  { name: "Wayanad", state: "Kerala", icon: "🌴" },
+  { name: "Mukteshwar", state: "Uttarakhand", icon: "⛰️" },
+  { name: "Amritsar", state: "Punjab", icon: "🌾" },
+];
+
+function HeaderContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialLocation = searchParams?.get("location") || "";
+  const [location, setLocation] = useState(initialLocation);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const { currentUser, switchUser } = useAuth();
+
+  // Active individual dropdown tab: null | "where" | "time" | "guests"
+  const [activeDropdown, setActiveDropdown] = useState<"where" | "time" | "guests" | null>(null);
+  
+  // Date states
+  const [searchCheckIn, setSearchCheckIn] = useState(searchParams?.get("checkIn") || "");
+  const [searchCheckOut, setSearchCheckOut] = useState(searchParams?.get("checkOut") || "");
+  const [timeMode, setTimeMode] = useState<"dates" | "flexible">("dates");
+  const [flexibleChoice, setFlexibleChoice] = useState<string>("Anytime");
+
+  // Guest counters
+  const [adults, setAdults] = useState(1);
+  const [childrenCount, setChildrenCount] = useState(0);
+  const [infants, setInfants] = useState(0);
+
+  const totalGuests = adults + childrenCount;
+  const searchBarRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearch = (customLocation?: string) => {
+    const loc = customLocation !== undefined ? customLocation : location;
+    const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
+    
+    if (loc.trim()) {
+      params.set("location", loc.trim());
+    } else {
+      params.delete("location");
+    }
+
+    if (searchCheckIn) params.set("checkIn", searchCheckIn);
+    else params.delete("checkIn");
+
+    if (searchCheckOut) params.set("checkOut", searchCheckOut);
+    else params.delete("checkOut");
+
+    if (totalGuests > 1) params.set("guests", totalGuests.toString());
+    else params.delete("guests");
+
+    setActiveDropdown(null);
+    router.push(`/?${params.toString()}`);
+  };
+
+  const getGuestLabel = () => {
+    if (totalGuests <= 1 && infants === 0) return "Add guests";
+    let text = `${totalGuests} ${totalGuests === 1 ? "guest" : "guests"}`;
+    if (infants > 0) text += `, ${infants} inf`;
+    return text;
+  };
+
+  const getTimeLabel = () => {
+    if (timeMode === "flexible" && flexibleChoice !== "Anytime") {
+      return flexibleChoice;
+    }
+    if (searchCheckIn && searchCheckOut) {
+      return `${searchCheckIn.slice(5)} – ${searchCheckOut.slice(5)}`;
+    }
+    return "Add dates";
+  };
+
   return (
-    <header className="c2zxfaj atm_9s_1txwivl atm_fc_1yb4nlp atm_h_1h6ojuz atm_gn_idpfg4 atm_gw_1wugsn5 atm_j3_1vvhni0 atm_lk_1tcgj5g atm_ll_1tcgj5g atm_e2_u29brm atm_lk_1vi7ecw__1v156lz atm_lk_fyhuej__jx8car atm_ll_1vi7ecw__1v156lz atm_ll_fyhuej__jx8car atm_e2_rw9lz9__jx8car dir dir-ltr">
-      <div className="l12pedmr atm_1wn1q82_1dgapyx atm_wq_kb7nvz dir dir-ltr">
-        <a className="c13cw3wj atm_kd_glywfm atm_h_1h6ojuz atm_9s_116y0ak atm_e2_u29brm atm_mk_h2mmj6 atm_vh_nkobfv atm_wq_kb7nvz atm_uc_p3p0zr atm_3f_glywfm_jo46a5 atm_l8_idpfg4_jo46a5 atm_gi_idpfg4_jo46a5 atm_3f_glywfm_1icshfk atm_kd_glywfm_19774hq atm_5j_1fwxnve_vmtskl atm_6i_1fwxnve_vmtskl atm_92_1yyfdc7_vmtskl atm_fq_zt4szt_vmtskl atm_mk_stnw88_vmtskl atm_n3_zt4szt_vmtskl atm_tk_1fwxnve_vmtskl atm_uc_1wx0j5_9xuho3 atm_70_1hkpa4_9xuho3 atm_uc_glywfm_9xuho3_1rrf6b5 cbavvlr atm_7l_1wzowgc atm_7l_1wzowgc_pfnrn2 atm_7l_1wzowgc_1nos8r dir dir-ltr" aria-label="Airbnb homepage" href="/">
-          <div className="l10sdlqs atm_9s_glywfm atm_9s_1ulexfb__1v156lz dir dir-ltr">
-            <svg width="102" height="32" viewBox="0 0 3490 1080" style={{ display: 'block' }}>
-              <path d="M1494.71 456.953C1458.28 412.178 1408.46 389.892 1349.68 389.892C1233.51 389.892 1146.18 481.906 1146.18 605.892C1146.18 729.877 1233.51 821.892 1349.68 821.892C1408.46 821.892 1458.28 799.605 1494.71 754.83L1500.95 810.195H1589.84V401.588H1500.95L1494.71 456.953ZM1369.18 736.895C1295.33 736.895 1242.08 683.41 1242.08 605.892C1242.08 528.373 1295.33 474.888 1369.18 474.888C1443.02 474.888 1495.49 529.153 1495.49 605.892C1495.49 682.63 1443.8 736.895 1369.18 736.895ZM1656.11 810.195H1750.46V401.588H1656.11V810.195ZM948.912 666.715C875.618 506.859 795.308 344.664 713.438 184.809C698.623 155.177 670.554 98.2527 645.603 67.8412C609.736 24.1733 556.715 0.779785 502.915 0.779785C449.115 0.779785 396.094 24.1733 360.227 67.8412C335.277 98.2527 307.207 155.177 292.392 184.809C210.522 344.664 130.212 506.859 56.9187 666.715C47.5621 687.769 24.9504 737.675 16.3736 760.289C6.2373 787.581 0.779297 817.213 0.779297 846.845C0.779297 975.509 101.362 1079.22 235.473 1079.22C346.193 1079.22 434.3 1008.26 502.915 934.18C571.53 1008.26 659.638 1079.22 770.357 1079.22C904.468 1079.22 1005.83 975.509 1005.83 846.845C1005.83 817.213 999.593 787.581 989.457 760.289C980.88 737.675 958.268 687.769 948.912 666.715ZM502.915 810.195C447.555 738.455 396.094 649.56 396.094 577.819C396.094 506.079 446.776 470.209 502.915 470.209C559.055 470.209 610.516 508.419 610.516 577.819C610.516 647.22 558.275 738.455 502.915 810.195ZM770.357 998.902C688.362 998.902 618.032 941.557 555.741 872.656C619.966 792.541 690.826 679.121 690.826 577.819C690.826 458.513 598.04 389.892 502.915 389.892C407.79 389.892 315.784 458.513 315.784 577.819C315.784 679.098 386.145 792.478 450.144 872.593C387.845 941.526 317.491 998.902 235.473 998.902C146.586 998.902 81.0898 931.061 81.0898 846.845C81.0898 826.57 84.2087 807.856 91.2261 788.361C98.2436 770.426 120.855 720.52 130.212 701.025C203.505 541.17 282.256 380.534 364.126 220.679C378.941 191.047 403.891 141.921 422.605 119.307C442.877 94.3538 470.947 81.0975 502.915 81.0975C534.883 81.0975 562.953 94.3538 583.226 119.307C601.939 141.921 626.89 191.047 641.704 220.679C723.574 380.534 802.325 541.17 875.618 701.025C884.975 720.52 907.587 770.426 914.604 788.361C921.622 807.856 925.52 826.57 925.52 846.845C925.52 931.061 859.244 998.902 770.357 998.902ZM3285.71 389.892C3226.91 389.892 3175.97 413.098 3139.91 456.953V226.917H3045.56V810.195H3134.45L3140.69 754.83C3177.12 799.605 3226.94 821.892 3285.71 821.892C3401.89 821.892 3489.22 729.877 3489.22 605.892C3489.22 481.906 3401.89 389.892 3285.71 389.892ZM3266.22 736.895C3191.6 736.895 3139.91 682.63 3139.91 605.892C3139.91 529.153 3191.6 474.888 3266.22 474.888C3340.85 474.888 3393.32 528.373 3393.32 605.892C3393.32 683.41 3340.07 736.895 3266.22 736.895ZM2827.24 389.892C2766.15 389.892 2723.56 418.182 2699.37 456.953L2693.13 401.588H2604.24V810.195H2698.59V573.921C2698.59 516.217 2741.47 474.888 2800.73 474.888C2856.87 474.888 2888.84 513.097 2888.84 578.599V810.195H2983.19V566.903C2983.19 457.733 2923.15 389.892 2827.24 389.892ZM1911.86 460.072L1905.62 401.588H1816.73V810.195H1911.08V604.332C1911.08 532.592 1954.74 486.585 2027.26 486.585C2042.85 486.585 2058.44 488.144 2070.92 492.043V401.588C2059.22 396.91 2044.41 395.35 2028.04 395.35C1978.58 395.35 1936.66 421.177 1911.86 460.072ZM2353.96 389.892C2295.15 389.892 2244.21 413.098 2208.15 456.953V226.917H2113.8V810.195H2202.69L2208.93 754.83C2245.36 799.605 2295.18 821.892 2353.96 821.892C2470.13 821.892 2557.46 729.877 2557.46 605.892C2557.46 481.906 2470.13 389.892 2353.96 389.892ZM2334.46 736.895C2259.84 736.895 2208.15 682.63 2208.15 605.892C2208.15 529.153 2259.84 474.888 2334.46 474.888C2409.09 474.888 2461.56 528.373 2461.56 605.892C2461.56 683.41 2408.31 736.895 2334.46 736.895ZM1703.28 226.917C1669.48 226.917 1642.08 254.326 1642.08 288.13C1642.08 321.934 1669.48 349.343 1703.28 349.343C1737.09 349.343 1764.49 321.934 1764.49 288.13C1764.49 254.326 1737.09 226.917 1703.28 226.917Z" fill="currentcolor"></path>
-            </svg>
-          </div>
-          <div className="bpe4snb atm_9s_glywfm__1v156lz dir dir-ltr">
-            <svg width="30" height="32" viewBox="0 0 1007 1080" style={{ display: 'block' }}>
-              <path d="M949.278 666.715C875.957 506.859 795.615 344.664 713.713 184.809C698.893 155.177 670.813 98.2527 645.852 67.8412C609.971 24.1733 556.93 0.779785 503.109 0.779785C449.288 0.779785 396.247 24.1733 360.366 67.8412C335.406 98.2527 307.325 155.177 292.505 184.809C210.603 344.664 130.262 506.859 56.9404 666.715C47.5802 687.769 24.9598 737.675 16.3796 760.289C6.23941 787.581 0.779297 817.213 0.779297 846.845C0.779297 975.509 101.401 1079.22 235.564 1079.22C346.326 1079.22 434.468 1008.26 503.109 934.18C571.751 1008.26 659.892 1079.22 770.655 1079.22C904.817 1079.22 1006.22 975.509 1006.22 846.845C1006.22 817.213 999.979 787.581 989.839 760.289C981.259 737.675 958.638 687.769 949.278 666.715ZM503.109 810.195C447.728 738.455 396.247 649.56 396.247 577.819C396.247 506.079 446.948 470.209 503.109 470.209C559.27 470.209 610.751 508.419 610.751 577.819C610.751 647.22 558.49 738.455 503.109 810.195ZM770.655 998.902C688.628 998.902 618.271 941.557 555.955 872.656C620.205 792.541 691.093 679.121 691.093 577.819C691.093 458.513 598.271 389.892 503.109 389.892C407.947 389.892 315.906 458.513 315.906 577.819C315.906 679.098 386.294 792.478 450.318 872.593C387.995 941.526 317.614 998.902 235.564 998.902C146.642 998.902 81.1209 931.061 81.1209 846.845C81.1209 826.57 84.241 807.856 91.2611 788.361C98.2812 770.426 120.902 720.52 130.262 701.025C203.583 541.17 282.365 380.534 364.267 220.679C379.087 191.047 404.047 141.921 422.768 119.307C443.048 94.3538 471.129 81.0975 503.109 81.0975C535.09 81.0975 563.17 94.3538 583.451 119.307C602.171 141.921 627.132 191.047 641.952 220.679C723.854 380.534 802.635 541.17 875.957 701.025C885.317 720.52 907.937 770.426 914.957 788.361C921.978 807.856 925.878 826.57 925.878 846.845C925.878 931.061 859.576 998.902 770.655 998.902Z" fill="currentcolor"></path>
-            </svg>
-          </div>
-        </a>
-      </div>
+    <header className="sticky top-0 z-50 bg-white dark:bg-[#181818] border-b border-gray-200 dark:border-neutral-800 transition-colors shadow-xs h-[64px] flex items-center">
+      <div className="max-w-[2520px] w-full mx-auto px-4 sm:px-6 md:px-10 xl:px-12 flex items-center justify-between gap-4">
+        
+        {/* Left: Official Airbnb Logo */}
+        <div className="flex-shrink-0 flex items-center">
+          <Link href="/" className="flex items-center gap-2 group">
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_B%C3%A9lo.svg" 
+              alt="Airbnb" 
+              className="h-7 sm:h-7.5 w-auto object-contain transition-transform group-hover:scale-105"
+            />
+          </Link>
+        </div>
 
-      <form className="f1hztvqy atm_vy_1osqo2v atm_e2_1osqo2v atm_mk_stnw88 atm_tk_idpfg4 atm_fq_idpfg4 atm_lh_ke7zzc atm_wq_idpfg4 dir dir-ltr">
-        <div className="c1omuab8 atm_vy_1osqo2v atm_9s_1txwivl atm_h_1h6ojuz atm_ar_1bp4okc atm_mk_h2mmj6 atm_wq_kb7nvz atm_mj_glywfm atm_h3_ftgil2__jx8car dir dir-ltr" style={{ transform: 'none' }}>
-          <div>
-            <div className="tgfth7w atm_vy_dgintm atm_gi_1w81u1x atm_uc_njrk8o__1igb08s atm_vz_brmitn__1igb08s t4vrnnf atm_k4_kb7nvz atm_ud_o03ep1 atm_mj_1wugsn5 dir dir-ltr">
-              <div className="c1q7wpad atm_mk_h2mmj6 cogfa60 atm_9s_11p5wf0 atm_dz_vud8gm atm_fc_1h6ojuz atm_h3_ftgil2 atm_cx_ldb6wv dir dir-ltr" role="tablist">
-                <a href="/" role="tab" aria-selected="true" tabIndex={0} className="s5o62i6 atm_9j_tlke0l atm_vb_glywfm atm_r2_1j28jx2 atm_kd_glywfm atm_3f_glywfm_jo46a5 atm_l8_idpfg4_jo46a5 atm_gi_idpfg4_jo46a5 atm_3f_glywfm_1icshfk atm_kd_glywfm_19774hq w6avlzg atm_9s_1txwivl atm_h_1h6ojuz atm_gq_1fwxnve atm_5j_ftgil2_1w3cfyq atm_kd_16t75vl_1w3cfyq atm_kh_1y44olf_1w3cfyq w1ppews5 atm_h0_14y27yu atm_ll_14y27yu dir dir-ltr">
-                  <span className="w10nbchi atm_mk_h2mmj6 dir dir-ltr" style={{ transform: 'none' }} aria-hidden="true">
-                    <span className="s17dpylj atm_9s_1ulexfb atm_vy_14noui3 atm_e2_14noui3 dir dir-ltr">
-                      <div className="if5gw4l atm_mk_h2mmj6 atm_e2_1osqo2v atm_vy_1osqo2v dir dir-ltr">
-                        <div className="i1hxsjxb atm_mk_stnw88 atm_f3_idpfg4 atm_uq_brmitn atm_uv_i20lr3 atm_ui_1wnasth atm_9s_1txwivl atm_h_1h6ojuz atm_fc_1h6ojuz atm_ui_w3neq7__1rrf6b5 ibioziv atm_k4_idpfg4 dir dir-ltr">
-                          <img src="https://a0.muscache.com/im/pictures/AirbnbPlatformAssets/AirbnbPlatformAssets-search-bar-icons/original/f50ce552-509c-4f54-af4c-605c5220d906.png?im_w=240" alt="" className="simi9jf atm_jp_1f51e7f atm_jr_1h6ojuz atm_vy_1osqo2v atm_e2_1osqo2v atm_tr_18ws4an atm_mj_glywfm atm_mk_h2mmj6 dir dir-ltr" width="36" height="36" loading="lazy" />
-                        </div>
-                        <div className="i1hxsjxb atm_mk_stnw88 atm_f3_idpfg4 atm_uq_brmitn atm_uv_i20lr3 atm_ui_1wnasth atm_9s_1txwivl atm_h_1h6ojuz atm_fc_1h6ojuz atm_ui_w3neq7__1rrf6b5 i1yruaz2 atm_k4_kb7nvz dir dir-ltr">
-                          <img src="https://a0.muscache.com/im/pictures/AirbnbPlatformAssets/AirbnbPlatformAssets-search-bar-icons/original/a811de29-114f-43a0-b8c5-698d4564bd04.png?im_w=240" alt="" className="simi9jf atm_jp_1f51e7f atm_jr_1h6ojuz atm_vy_1osqo2v atm_e2_1osqo2v atm_tr_18ws4an atm_mj_glywfm atm_mk_h2mmj6 dir dir-ltr" width="36" height="36" />
-                        </div>
-                      </div>
-                    </span>
-                  </span>
-                  <span className="sxeg3i2 atm_ti_1q9ccgz atm_cs_1mexzig sgwsc4z atm_7l_hfv0h6 w14w6ssu atm_c8_dlk8xv atm_g3_f6fqlb atm_7l_hfv0h6_1nos8r w1limbpw atm_gz_ftgil2 dir dir-ltr" aria-hidden="true">All</span>
-                  <span className="a8jt5op atm_3f_idpfg4 atm_7h_hxbz6r atm_7i_ysn8ba atm_e2_t94yts atm_ks_zryt35 atm_l8_idpfg4 atm_mk_stnw88 atm_vv_1q9ccgz atm_vy_t94yts dir dir-ltr">All</span>
-                </a>
+        {/* Center: Compact Wide Airbnb Search Bar */}
+        <div ref={searchBarRef} className="flex-1 flex justify-center max-w-2xl mx-auto relative">
+          
+          <div className="w-full max-w-xl bg-white dark:bg-[#202020] border border-gray-300 dark:border-neutral-700 rounded-full shadow-xs hover:shadow-md transition-all flex items-center divide-x divide-gray-200 dark:divide-neutral-700 p-0.5 sm:p-1">
+            
+            {/* 1. Where Segment */}
+            <div
+              onClick={() => setActiveDropdown(activeDropdown === "where" ? null : "where")}
+              className={`flex-1 px-3 py-1 rounded-full cursor-pointer transition text-left ${
+                activeDropdown === "where" ? "bg-neutral-100 dark:bg-neutral-800" : "hover:bg-neutral-50 dark:hover:bg-neutral-800/40"
+              }`}
+            >
+              <div className="text-[10px] font-bold text-neutral-900 dark:text-white uppercase leading-none">Where</div>
+              <div className="text-xs font-normal text-neutral-500 dark:text-neutral-300 truncate mt-0.5">
+                {location || "Search destinations"}
               </div>
             </div>
+
+            {/* 2. When Segment */}
+            <div
+              onClick={() => setActiveDropdown(activeDropdown === "time" ? null : "time")}
+              className={`flex-1 px-3 py-1 rounded-full cursor-pointer transition text-left hidden sm:block ${
+                activeDropdown === "time" ? "bg-neutral-100 dark:bg-neutral-800" : "hover:bg-neutral-50 dark:hover:bg-neutral-800/40"
+              }`}
+            >
+              <div className="text-[10px] font-bold text-neutral-900 dark:text-white uppercase leading-none">When</div>
+              <div className="text-xs font-normal text-neutral-500 dark:text-neutral-300 truncate mt-0.5">
+                {getTimeLabel()}
+              </div>
+            </div>
+
+            {/* 3. Who Segment */}
+            <div
+              onClick={() => setActiveDropdown(activeDropdown === "guests" ? null : "guests")}
+              className={`flex-1 px-3 py-1 rounded-full cursor-pointer transition text-left flex items-center justify-between ${
+                activeDropdown === "guests" ? "bg-neutral-100 dark:bg-neutral-800" : "hover:bg-neutral-50 dark:hover:bg-neutral-800/40"
+              }`}
+            >
+              <div className="overflow-hidden">
+                <div className="text-[10px] font-bold text-neutral-900 dark:text-white uppercase leading-none">Who</div>
+                <div className="text-xs font-normal text-neutral-500 dark:text-neutral-300 truncate mt-0.5">
+                  {getGuestLabel()}
+                </div>
+              </div>
+
+              {/* Red Search Button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSearch();
+                }}
+                className="w-8 h-8 rounded-full bg-[#FF385C] hover:bg-[#E00B41] text-white flex items-center justify-center shadow-xs transition-transform hover:scale-105 active:scale-95 cursor-pointer ml-1.5 flex-shrink-0"
+                aria-label="Search stays"
+              >
+                <svg
+                  viewBox="0 0 32 32"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-3.5 h-3.5 fill-none stroke-current stroke-[4px]"
+                >
+                  <path d="M20.666 20.666 30 30" />
+                  <path d="M24.0002 12.6668c0 6.2593-5.0741 11.3334-11.3334 11.3334-6.2592 0-11.3333-5.0741-11.3333-11.3334 0-6.2592 5.0741-11.3333 11.3333-11.3333 6.2593 0 11.3334 5.0741 11.3334 11.3333z" />
+                </svg>
+              </button>
+            </div>
+
           </div>
 
-          {/* Search bar inside header */}
-          <div className="cwxaa06 atm_mk_stnw88 atm_fq_1ssbidh atm_tr_zr6sja atm_j3_1iukb28 atm_vy_1osqo2v atm_e2_9d2x3j atm_9s_1txwivl atm_5j_1vi7ecw atm_cx_1fwxnve atm_fc_1yb4nlp atm_h_1h6ojuz atm_mj_1wugsn5 c1p4h3dr atm_1wn1q82_1agbdn7 dir dir-ltr">
-            <div className="b1x9m868 atm_mk_stnw88 atm_vy_1osqo2v atm_e2_1osqo2v atm_tk_idpfg4 atm_fq_idpfg4 atm_wq_6qw0ka atm_5j_12xxubj dir dir-ltr" style={{ backgroundColor: 'var(--palette-white)', borderRadius: '100px', transform: 'none' }}>
-              <div className="fwvguhx atm_9s_11p5wf0 atm_dz_1hjezxp atm_vy_1osqo2v atm_e2_1osqo2v atm_26_1j28jx2 atm_h_1h6ojuz atm_cx_yh40bf atm_5j_1vi7ecw dir dir-ltr">
-                <div className="fhzfs0e atm_mk_h2mmj6 atm_9j_tlke0l atm_5j_1vi7ecw atm_e2_1osqo2v atm_vy_1osqo2v atm_9s_1txwivl atm_h_1h6ojuz atm_fc_1yb4nlp atm_kd_glywfm atm_70_1hkpa4_1w3cfyq atm_92_1yyfdc7_vmtskl atm_mk_stnw88_vmtskl atm_tk_1ssbidh_vmtskl atm_tr_1i34xl8_vmtskl atm_fq_myb0kj_vmtskl atm_vy_54a6mi_vmtskl atm_e2_1vi7ecw_vmtskl atm_2d_1j28jx2_vmtskl atm_wq_1mrwo0b_vmtskl atm_mj_glywfm_vmtskl atm_92_1yyfdc7_9in345 atm_mk_stnw88_9in345 atm_tk_idpfg4_9in345 atm_vy_u0ciey_9in345 atm_e2_1osqo2v_9in345 atm_26_1j28jx2_9in345 atm_5j_1vi7ecw_9in345 atm_wq_1mrwo0b_9in345 atm_mj_glywfm_9in345 f1xmefpa atm_26_vjbwx7_1nos8r atm_2d_9yka83_1rqz0hn fhhqr0q atm_vy_1pbc45q_1rqz0hn atm_fq_1y44olf_1rqz0hn atm_fq_idpfg4_9bj8xt dir dir-ltr">
-                  <div className="f67r5k6 atm_mk_h2mmj6 atm_wq_cs5v99 atm_vy_1osqo2v atm_jb_idpfg4 atm_ks_zryt35 f8h9euk atm_l8_115qw9y dir dir-ltr">
-                    <div className="f1i5a5z atm_c8_1gcojkr atm_g3_15xinxl atm_fr_8r8w0r atm_cs_1mexzig atm_7l_14zl091 atm_le_yh40bf atm_vv_1q9ccgz atm_ks_zryt35 atm_sq_1l2sidv dir dir-ltr">Where</div>
-                    <div>
-                      <input className="fornie7 atm_9s_1ulexfb atm_3f_idpfg4 atm_gi_idpfg4 atm_l8_idpfg4 atm_vy_1osqo2v atm_26_glywfm atm_c8_1h3mmnw atm_g3_1vnrj90 atm_fr_b3emyl atm_cs_1mexzig atm_7l_14zl091 atm_sq_1l2sidv atm_vv_1q9ccgz atm_ks_zryt35 atm_c8_1h3mmnw_3ykvna atm_g3_1vnrj90_3ykvna atm_fr_b3emyl_3ykvna atm_cs_1dh25pa_3ykvna atm_7l_gyfspu_3ykvna atm_9s_glywfm_169oxbr atm_9s_glywfm_10uishg atm_9s_glywfm_136h51u atm_kd_glywfm_pfnrn2 atm_ll_1fwxnve_c2x6ez dir dir-ltr" type="search" placeholder="Search destinations" aria-label="Where" autoComplete="off" autoCorrect="off" spellCheck="false" defaultValue="Varanasi" />
+          {/* 1. Destination Dropdown Window */}
+          {activeDropdown === "where" && (
+            <div className="absolute top-full left-0 mt-2 w-full sm:w-[400px] bg-white dark:bg-[#202020] rounded-2xl p-4 shadow-2xl border border-gray-200 dark:border-neutral-700 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold uppercase text-neutral-500 dark:text-neutral-400">Search by destination</span>
+                {location && (
+                  <button onClick={() => setLocation("")} className="text-xs underline text-neutral-500 cursor-pointer">Clear</button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 border border-gray-300 dark:border-neutral-700 rounded-xl px-3 py-2 mb-3 focus-within:border-black dark:focus-within:border-white">
+                <svg viewBox="0 0 32 32" className="w-3.5 h-3.5 fill-none stroke-current stroke-[3px] text-neutral-400">
+                  <path d="M20.666 20.666 30 30" />
+                  <path d="M24.0002 12.6668c0 6.2593-5.0741 11.3334-11.3334 11.3334-6.2592 0-11.3333-5.0741-11.3333-11.3334 0-6.2592 5.0741-11.3333 11.3333-11.3333 6.2593 0 11.3334 5.0741 11.3334 11.3333z" />
+                </svg>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Type city (e.g. Varanasi, Jaipur, Goa)"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+                  className="w-full text-xs font-semibold outline-none bg-transparent text-neutral-900 dark:text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 max-h-44 overflow-y-auto">
+                {POPULAR_DESTINATIONS.map((dest) => (
+                  <button
+                    key={dest.name}
+                    type="button"
+                    onClick={() => {
+                      setLocation(dest.name);
+                      handleSearch(dest.name);
+                    }}
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-left transition cursor-pointer"
+                  >
+                    <span className="text-base">{dest.icon}</span>
+                    <div className="overflow-hidden">
+                      <div className="font-bold text-xs text-neutral-900 dark:text-white truncate">{dest.name}</div>
+                      <div className="text-[10px] text-neutral-400 truncate">{dest.state}</div>
                     </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 2. Time Dropdown Window */}
+          {activeDropdown === "time" && (
+            <div className="absolute top-full left-1/4 mt-2 w-full sm:w-[400px] bg-white dark:bg-[#202020] rounded-2xl p-4 shadow-2xl border border-gray-200 dark:border-neutral-700 z-50 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex bg-neutral-100 dark:bg-neutral-800 rounded-xl p-1 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setTimeMode("dates")}
+                  className={`flex-1 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    timeMode === "dates"
+                      ? "bg-white dark:bg-[#282828] text-neutral-900 dark:text-white shadow-xs"
+                      : "text-neutral-500 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  Choose dates
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTimeMode("flexible")}
+                  className={`flex-1 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    timeMode === "flexible"
+                      ? "bg-white dark:bg-[#282828] text-neutral-900 dark:text-white shadow-xs"
+                      : "text-neutral-500 hover:text-black dark:hover:text-white"
+                  }`}
+                >
+                  Flexible
+                </button>
+              </div>
+
+              {timeMode === "dates" ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="border border-gray-300 dark:border-neutral-700 rounded-xl p-2.5">
+                    <label className="text-[9px] font-bold uppercase text-neutral-500 block mb-0.5">Check-in</label>
+                    <input
+                      type="date"
+                      value={searchCheckIn}
+                      onChange={(e) => setSearchCheckIn(e.target.value)}
+                      className="w-full text-xs font-semibold outline-none bg-transparent text-neutral-900 dark:text-white cursor-pointer"
+                    />
+                  </div>
+                  <div className="border border-gray-300 dark:border-neutral-700 rounded-xl p-2.5">
+                    <label className="text-[9px] font-bold uppercase text-neutral-500 block mb-0.5">Checkout</label>
+                    <input
+                      type="date"
+                      min={searchCheckIn}
+                      value={searchCheckOut}
+                      onChange={(e) => setSearchCheckOut(e.target.value)}
+                      className="w-full text-xs font-semibold outline-none bg-transparent text-neutral-900 dark:text-white cursor-pointer"
+                    />
                   </div>
                 </div>
-                <div className="f21hh4j atm_vy_t94yts atm_e2_1vi7ecw atm_26_jv14fq atm_wq_1m4mje8 dir dir-ltr"></div>
-                <div className="fhzfs0e atm_mk_h2mmj6 atm_9j_tlke0l atm_5j_1vi7ecw atm_e2_1osqo2v atm_vy_1osqo2v atm_9s_1txwivl atm_h_1h6ojuz atm_fc_1yb4nlp atm_kd_glywfm atm_70_1hkpa4_1w3cfyq atm_92_1yyfdc7_vmtskl atm_mk_stnw88_vmtskl atm_tk_1ssbidh_vmtskl atm_tr_1i34xl8_vmtskl atm_fq_myb0kj_vmtskl atm_vy_54a6mi_vmtskl atm_e2_1vi7ecw_vmtskl atm_2d_1j28jx2_vmtskl atm_wq_1mrwo0b_vmtskl atm_mj_glywfm_vmtskl atm_92_1yyfdc7_9in345 atm_mk_stnw88_9in345 atm_tk_idpfg4_9in345 atm_vy_u0ciey_9in345 atm_e2_1osqo2v_9in345 atm_26_1j28jx2_9in345 atm_5j_1vi7ecw_9in345 atm_wq_1mrwo0b_9in345 atm_mj_glywfm_9in345 f1xmefpa atm_26_vjbwx7_1nos8r atm_2d_9yka83_1rqz0hn dir dir-ltr" role="button" tabIndex={0}>
-                  <div className="f67r5k6 atm_mk_h2mmj6 atm_l8_1ieir7h atm_wq_cs5v99 atm_vy_1osqo2v atm_jb_idpfg4 atm_ks_zryt35 dir dir-ltr">
-                    <div className="f1i5a5z atm_c8_1gcojkr atm_g3_15xinxl atm_fr_8r8w0r atm_cs_1mexzig atm_7l_14zl091 atm_le_yh40bf atm_vv_1q9ccgz atm_ks_zryt35 atm_sq_1l2sidv dir dir-ltr">When</div>
-                    <div><div className="f1izdi3g atm_c8_1h3mmnw atm_g3_1vnrj90 atm_fr_b3emyl atm_cs_1dh25pa atm_7l_gyfspu atm_vv_1q9ccgz atm_ks_zryt35 atm_sq_1l2sidv dir dir-ltr">Add dates</div></div>
-                  </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-1.5">
+                  {["Weekend", "One week", "One month", "Anytime"].map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => {
+                        setFlexibleChoice(option);
+                        handleSearch();
+                      }}
+                      className={`p-2.5 rounded-lg border text-xs font-bold text-left transition cursor-pointer ${
+                        flexibleChoice === option
+                          ? "border-black dark:border-white bg-neutral-900 dark:bg-white text-white dark:text-black"
+                          : "border-gray-200 dark:border-neutral-700 hover:border-black text-neutral-800 dark:text-neutral-200"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
                 </div>
-                <div className="f21hh4j atm_vy_t94yts atm_e2_1vi7ecw atm_26_jv14fq atm_wq_1m4mje8 dir dir-ltr"></div>
-                <div className="fhzfs0e atm_mk_h2mmj6 atm_9j_tlke0l atm_5j_1vi7ecw atm_e2_1osqo2v atm_vy_1osqo2v atm_9s_1txwivl atm_h_1h6ojuz atm_fc_1yb4nlp atm_kd_glywfm atm_70_1hkpa4_1w3cfyq atm_92_1yyfdc7_vmtskl atm_mk_stnw88_vmtskl atm_tk_1ssbidh_vmtskl atm_tr_1i34xl8_vmtskl atm_fq_myb0kj_vmtskl atm_vy_54a6mi_vmtskl atm_e2_1vi7ecw_vmtskl atm_2d_1j28jx2_vmtskl atm_wq_1mrwo0b_vmtskl atm_mj_glywfm_vmtskl atm_92_1yyfdc7_9in345 atm_mk_stnw88_9in345 atm_tk_idpfg4_9in345 atm_e2_1osqo2v_9in345 atm_26_1j28jx2_9in345 atm_5j_1vi7ecw_9in345 atm_wq_1mrwo0b_9in345 atm_mj_glywfm_9in345 f1xmefpa atm_26_vjbwx7_1nos8r atm_2d_9yka83_1rqz0hn f14t008e atm_vy_1osqo2v_1rqz0hn atm_n3_idpfg4_9bj8xt atm_vy_u0ciey_9bj8xt atm_vy_1osqo2v_9in345 dir dir-ltr" role="button" tabIndex={0}>
-                  <div className="f67r5k6 atm_mk_h2mmj6 atm_l8_1ieir7h atm_wq_cs5v99 atm_vy_1osqo2v atm_jb_idpfg4 atm_ks_zryt35 f1o8nkkf atm_li_1v58565 dir dir-ltr">
-                    <div className="f1i5a5z atm_c8_1gcojkr atm_g3_15xinxl atm_fr_8r8w0r atm_cs_1mexzig atm_7l_14zl091 atm_le_yh40bf atm_vv_1q9ccgz atm_ks_zryt35 atm_sq_1l2sidv dir dir-ltr">Who</div>
-                    <div><div className="f1izdi3g atm_c8_1h3mmnw atm_g3_1vnrj90 atm_fr_b3emyl atm_cs_1dh25pa atm_7l_gyfspu atm_vv_1q9ccgz atm_ks_zryt35 atm_sq_1l2sidv dir dir-ltr">Add guests</div></div>
-                  </div>
+              )}
+            </div>
+          )}
+
+          {/* 3. Guests Dropdown Window */}
+          {activeDropdown === "guests" && (
+            <div className="absolute top-full right-0 mt-2 w-full sm:w-[340px] bg-white dark:bg-[#202020] rounded-2xl p-4 shadow-2xl border border-gray-200 dark:border-neutral-700 z-50 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-150">
+              {/* Adults */}
+              <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-neutral-800">
+                <div>
+                  <div className="font-semibold text-xs text-neutral-900 dark:text-white">Adults</div>
+                  <div className="text-[10px] text-neutral-500">Age 13+</div>
                 </div>
-                <div className="smjxy64 atm_mk_stnw88 atm_n3_idpfg4 atm_wq_cs5v99 atm_lb_19bvopo atm_lj_19bvopo atm_li_io9nn2 atm_mj_glywfm dir dir-ltr">
-                  <button className="siey6h7 atm_1s_glywfm atm_26_1j28jx2 atm_3f_idpfg4 atm_7l_1kw7nm4 atm_9j_tlke0l atm_9s_1o8liyq atm_bx_1kw7nm4 atm_c8_1kw7nm4 atm_cs_1kw7nm4 atm_g3_1kw7nm4 atm_gi_idpfg4 atm_ks_ewfl5b atm_l8_idpfg4 atm_r3_1kw7nm4 atm_rd_glywfm atm_vb_1wugsn5 atm_kd_glywfm atm_mj_1rj4a2z atm_5j_12am3vd atm_3f_glywfm_jo46a5 atm_l8_idpfg4_jo46a5 atm_gi_idpfg4_jo46a5 atm_3f_glywfm_1icshfk atm_kd_glywfm_19774hq atm_70_1l64qlu_1w3cfyq dir dir-ltr" type="button">
-                    <div className="s1n779tz atm_2d_jrfymf atm_7l_85zwdx atm_e2_fyhuej atm_vy_fyhuej atm_9s_1txwivl atm_fc_1h6ojuz atm_h_1h6ojuz atm_l8_19bvopo atm_26_x1skbv_1nos8r dir dir-ltr" style={{ borderRadius: '50px' }}>
-                      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="presentation" focusable="false" style={{ display: 'block', fill: 'none', height: '16px', width: '16px', stroke: 'currentcolor', strokeWidth: 4, overflow: 'visible' }}>
-                        <path d="m20.666 20.666 10 10"></path>
-                        <path d="m24.0002 12.6668c0 6.2593-5.0741 11.3334-11.3334 11.3334-6.2592 0-11.3333-5.0741-11.3333-11.3334 0-6.2592 5.0741-11.3333 11.3333-11.3333 6.2593 0 11.3334 5.0741 11.3334 11.3333z"></path>
-                      </svg>
-                    </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={adults <= 1}
+                    onClick={() => setAdults(Math.max(1, adults - 1))}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    –
+                  </button>
+                  <span className="w-4 text-center font-semibold text-xs">{adults}</span>
+                  <button
+                    type="button"
+                    disabled={totalGuests >= 10}
+                    onClick={() => setAdults(adults + 1)}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    +
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </form>
 
-      <div className="nnv65up atm_1wn1q82_1balvux dir dir-ltr">
-        <nav aria-label="Profile" className="cg7l307 atm_mk_h2mmj6 atm_9s_1txwivl atm_h_1h6ojuz atm_fc_esu3gu atm_e2_u29brm dir dir-ltr">
-          <div className="l3mxch7 atm_9s_1txwivl atm_am_1wugsn5 atm_fc_esu3gu atm_cx_1fwxnve atm_h_1h6ojuz atm_h0_1fwxnve l7hgz3h atm_9s_glywfm_1iyvsap_1a4xmnj dir dir-ltr">
-            <a href="/host" className="l1lx1n3h atm_npmupv_14b5rvc_10saat9 atm_4s4swg_18xq13z_10saat9 atm_u9em2p_1r3889l_10saat9 atm_1ezpcqw_1u41vd9_10saat9 atm_fyjbsv_c4n71i_10saat9 atm_1rna0z7_1uk391_10saat9 b1iwgx3r atm_9j_tlke0l atm_9s_1o8liyq atm_gi_idpfg4 atm_mk_h2mmj6 atm_r3_1h6ojuz atm_rd_glywfm atm_3f_11akh3i atm_70_5j5alw atm_vy_1wugsn5 atm_l8_1cudcw5 atm_tl_1gw4zv3 atm_9j_13gfvf7_1o5j5ji c15xyj5u atm_bx_nm7nsd atm_c8_eyeb2l atm_g3_k6hx5t atm_cs_1mexzig atm_26_1i7d4jj atm_20_13viflf atm_7l_1ca5zq3 atm_4b_1oq6qme atm_6h_dpi2ty atm_66_nqa18y atm_kd_glywfm atm_jb_16cl52u atm_uc_5v27g6 atm_r2_1j28jx2 atm_uc_oxy5qq_wc6gzy atm_uc_glywfm__1rrf6b5 atm_kd_glywfm_1w3cfyq atm_uc_1wx0j5_1w3cfyq atm_4b_1r2f4og_1w3cfyq atm_3f_glywfm_e4a3ld atm_l8_idpfg4_e4a3ld atm_gi_idpfg4_e4a3ld atm_3f_glywfm_1r4qscq atm_kd_glywfm_6y7yyg atm_uc_glywfm_1w3cfyq_1rrf6b5 atm_4b_1ymcg8c_1nos8r_uv4tnr atm_26_asnl7k_1nos8r_uv4tnr atm_tr_c3l1w2_z5n1qr_uv4tnr atm_4b_1cpdnk2_pd0br1_uv4tnr atm_26_zp0x24_pd0br1_uv4tnr atm_7l_1n4947f_pd0br1_uv4tnr atm_4b_13y81g2_4fughm_uv4tnr atm_26_zsif75_4fughm_uv4tnr atm_7l_3x6mlv_4fughm_uv4tnr atm_tr_glywfm_4fughm_uv4tnr atm_7l_1etjrq5_1nos8r atm_4b_1cpdnk2_csw3t1 atm_26_zp0x24_csw3t1 atm_7l_1n4947f_csw3t1 atm_tr_c3l1w2_csw3t1 atm_7l_1jopa2a_pfnrn2 atm_4b_13y81g2_1o5j5ji atm_26_zsif75_1o5j5ji atm_7l_3x6mlv_1o5j5ji atm_k4_kb7nvz_1o5j5ji atm_tr_glywfm_1o5j5ji b1nzsz0l atm_8w_1t7jgwy atm_lo_1skhajo atm_le_1skhajo atm_lk_1fwxnve atm_ll_1fwxnve atm_5j_gktfv atm_vv_1q9ccgz atm_26_1j28jx2_1w3cfyq atm_7l_hfv0h6_1w3cfyq atm_70_168lir4_1w3cfyq dir dir-ltr">
-              <span className="byttdbj atm_9s_1cw04bb atm_rd_1kw7nm4 atm_vz_kcpwjc atm_uc_kkvtv4 dir dir-ltr">Airbnb your home</span>
-            </a>
-            <div className="cxd0wgg atm_mk_h2mmj6 atm_9s_1o8liyq atm_vh_nkobfv atm_h3_1wugsn5 atm_gq_1wugsn5 dir dir-ltr">
-              <button aria-expanded="false" aria-label="Choose a language and currency" type="button" className="l1lx1n3h atm_npmupv_14b5rvc_10saat9 atm_4s4swg_18xq13z_10saat9 atm_u9em2p_1r3889l_10saat9 atm_1ezpcqw_1u41vd9_10saat9 atm_fyjbsv_c4n71i_10saat9 atm_1rna0z7_1uk391_10saat9 c15yc2zx atm_1s_glywfm atm_5j_1ssbidh atm_9j_tlke0l atm_tl_1gw4zv3 atm_l8_idpfg4 atm_gi_idpfg4 atm_3f_glywfm atm_2d_v1pa1f atm_7l_lerloo atm_uc_9373uk atm_kd_glywfm atm_kd_glywfm_1w3cfyq atm_3f_glywfm_e4a3ld atm_l8_idpfg4_e4a3ld atm_gi_idpfg4_e4a3ld atm_3f_glywfm_1r4qscq atm_kd_glywfm_6y7yyg atm_9j_13gfvf7_1o5j5ji atm_2d_j26ubc_1rqz0hn_uv4tnr atm_4b_zpisrj_1rqz0hn_uv4tnr atm_20_112h1kz_1rqz0hn_uv4tnr atm_7l_oonxzo_4fughm_uv4tnr atm_2d_13vagss_4fughm_uv4tnr atm_2d_h7y8rf_1r92pmq_uv4tnr atm_4b_19swmmk_1r92pmq_uv4tnr atm_20_d71y6t_1r92pmq_uv4tnr atm_tr_8dwpus_1k46luq_uv4tnr atm_3f_glywfm_jo46a5 atm_l8_idpfg4_jo46a5 atm_gi_idpfg4_jo46a5 atm_3f_glywfm_1icshfk atm_kd_glywfm_19774hq atm_uc_1wx0j5_1w3cfyq atm_70_glywfm_1w3cfyq atm_uc_glywfm_1w3cfyq_1rrf6b5 atm_70_1qhewe0_9xuho3 atm_4b_1ukl3ww_9xuho3 atm_6h_1tpdecz_9xuho3 atm_66_nqa18y_9xuho3 atm_uc_11xq646_9xuho3 atm_2d_ez5gio_1ul2smo atm_4b_botz5_1ul2smo atm_20_112h1kz_1ul2smo atm_tr_8dwpus_d9f5ny atm_7l_oonxzo_1o5j5ji atm_2d_13vagss_1o5j5ji atm_k4_uk3aii_1o5j5ji atm_2d_1lbyi75_154oz7f atm_4b_7hps52_154oz7f atm_2d_il29g1_vmtskl atm_20_d71y6t_vmtskl atm_4b_thxgdg_vmtskl atm_6h_1ihynmr_vmtskl atm_66_nqa18y_vmtskl atm_uc_1dnsngb_vmtskl atm_92_1yyfdc7_vmtskl atm_9s_1ulexfb_vmtskl atm_mk_stnw88_vmtskl atm_tk_1ssbidh_vmtskl atm_fq_1ssbidh_vmtskl atm_tr_pryxvc_vmtskl atm_vy_12k9wfs_vmtskl atm_e2_33f83m_vmtskl atm_5j_wqrmaf_vmtskl atm_uc_glywfm__1rrf6b5 atm_uc_glywfm_vmtskl_1rrf6b5 h1hb6cau atm_mk_h2mmj6 atm_9s_116y0ak atm_fc_1h6ojuz atm_h_1h6ojuz atm_vy_1ylpe5n atm_e2_1ylpe5n dir dir-ltr">
-                <span className="b1pz0nql atm_vz_1d6e2k5 atm_uc_1qwcpln h1hb6cau atm_mk_h2mmj6 atm_9s_116y0ak atm_fc_1h6ojuz atm_h_1h6ojuz atm_vy_1ylpe5n atm_e2_1ylpe5n dir dir-ltr">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" role="presentation" focusable="false" style={{ display: 'block', height: '16px', width: '16px', fill: 'currentcolor' }}>
-                    <path d="M8 .25a7.77 7.77 0 0 1 7.75 7.78 7.75 7.75 0 0 1-7.52 7.72h-.25A7.75 7.75 0 0 1 .25 8.24v-.25A7.75 7.75 0 0 1 8 .25zm1.95 8.5h-3.9c.15 2.9 1.17 5.34 1.88 5.5H8c.68 0 1.72-2.37 1.93-5.23zm4.26 0h-2.76c-.09 1.96-.53 3.78-1.18 5.08A6.26 6.26 0 0 0 14.17 9zm-9.67 0H1.8a6.26 6.26 0 0 0 3.94 5.08 12.59 12.59 0 0 1-1.16-4.7l-.03-.38zm1.2-6.58-.12.05a6.26 6.26 0 0 0-3.83 5.03h2.75c.09-1.83.48-3.54 1.06-4.81zm2.25-.42c-.7 0-1.78 2.51-1.94 5.5h3.9c-.15-2.9-1.18-5.34-1.89-5.5h-.07zm2.28.43.03.05a12.95 12.95 0 0 1 1.15 5.02h2.75a6.28 6.28 0 0 0-3.93-5.07z"></path>
-                  </svg>
-                </span>
-              </button>
-            </div>
-            <div className="bqhczku dir dir-ltr">
-              <div className="cqdorda atm_9s_1nu9bjl atm_mk_h2mmj6 dir dir-ltr">
-                <button aria-expanded="false" aria-label="Main navigation menu" type="button" className="l1lx1n3h atm_npmupv_14b5rvc_10saat9 atm_4s4swg_18xq13z_10saat9 atm_u9em2p_1r3889l_10saat9 atm_1ezpcqw_1u41vd9_10saat9 atm_fyjbsv_c4n71i_10saat9 atm_1rna0z7_1uk391_10saat9 c15yc2zx atm_1s_glywfm atm_5j_1ssbidh atm_9j_tlke0l atm_tl_1gw4zv3 atm_l8_idpfg4 atm_gi_idpfg4 atm_3f_glywfm atm_2d_v1pa1f atm_7l_lerloo atm_uc_9373uk atm_kd_glywfm atm_kd_glywfm_1w3cfyq atm_3f_glywfm_e4a3ld atm_l8_idpfg4_e4a3ld atm_gi_idpfg4_e4a3ld atm_3f_glywfm_1r4qscq atm_kd_glywfm_6y7yyg atm_9j_13gfvf7_1o5j5ji atm_2d_j26ubc_1rqz0hn_uv4tnr atm_4b_zpisrj_1rqz0hn_uv4tnr atm_20_112h1kz_1rqz0hn_uv4tnr atm_7l_oonxzo_4fughm_uv4tnr atm_2d_13vagss_4fughm_uv4tnr atm_2d_h7y8rf_1r92pmq_uv4tnr atm_4b_19swmmk_1r92pmq_uv4tnr atm_20_d71y6t_1r92pmq_uv4tnr atm_tr_8dwpus_1k46luq_uv4tnr atm_3f_glywfm_jo46a5 atm_l8_idpfg4_jo46a5 atm_gi_idpfg4_jo46a5 atm_3f_glywfm_1icshfk atm_kd_glywfm_19774hq atm_uc_1wx0j5_1w3cfyq atm_70_glywfm_1w3cfyq atm_uc_glywfm_1w3cfyq_1rrf6b5 atm_70_1qhewe0_9xuho3 atm_4b_1ukl3ww_9xuho3 atm_6h_1tpdecz_9xuho3 atm_66_nqa18y_9xuho3 atm_uc_11xq646_9xuho3 atm_2d_ez5gio_1ul2smo atm_4b_botz5_1ul2smo atm_20_112h1kz_1ul2smo atm_tr_8dwpus_d9f5ny atm_7l_oonxzo_1o5j5ji atm_2d_13vagss_1o5j5ji atm_k4_uk3aii_1o5j5ji atm_2d_1lbyi75_154oz7f atm_4b_7hps52_154oz7f atm_2d_il29g1_vmtskl atm_20_d71y6t_vmtskl atm_4b_thxgdg_vmtskl atm_6h_1ihynmr_vmtskl atm_66_nqa18y_vmtskl atm_uc_1dnsngb_vmtskl atm_92_1yyfdc7_vmtskl atm_9s_1ulexfb_vmtskl atm_mk_stnw88_vmtskl atm_tk_1ssbidh_vmtskl atm_fq_1ssbidh_vmtskl atm_tr_pryxvc_vmtskl atm_vy_12k9wfs_vmtskl atm_e2_33f83m_vmtskl atm_5j_wqrmaf_vmtskl atm_uc_glywfm__1rrf6b5 atm_uc_glywfm_vmtskl_1rrf6b5 h1hb6cau atm_mk_h2mmj6 atm_9s_116y0ak atm_fc_1h6ojuz atm_h_1h6ojuz atm_vy_1ylpe5n atm_e2_1ylpe5n dir dir-ltr">
-                  <span className="b1pz0nql atm_vz_1d6e2k5 atm_uc_1qwcpln h1hb6cau atm_mk_h2mmj6 atm_9s_116y0ak atm_fc_1h6ojuz atm_h_1h6ojuz atm_vy_1ylpe5n atm_e2_1ylpe5n dir dir-ltr">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true" role="presentation" focusable="false" style={{ display: 'block', fill: 'none', height: '16px', width: '16px', stroke: 'currentcolor', strokeWidth: 3, overflow: 'visible' }}>
-                      <g fill="none"><path d="M2 16h28M2 24h28M2 8h28"></path></g>
-                    </svg>
-                  </span>
+              {/* Children */}
+              <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-neutral-800">
+                <div>
+                  <div className="font-semibold text-xs text-neutral-900 dark:text-white">Children</div>
+                  <div className="text-[10px] text-neutral-500">Ages 2–12</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={childrenCount <= 0}
+                    onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    –
+                  </button>
+                  <span className="w-4 text-center font-semibold text-xs">{childrenCount}</span>
+                  <button
+                    type="button"
+                    disabled={totalGuests >= 10}
+                    onClick={() => setChildrenCount(childrenCount + 1)}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleSearch()}
+                  className="bg-[#FF385C] hover:bg-[#E00B41] text-white font-bold text-xs px-4 py-2 rounded-xl shadow transition cursor-pointer"
+                >
+                  Apply
                 </button>
               </div>
             </div>
+          )}
+
+        </div>
+
+        {/* Right Controls: Become a host + Globe + User Menu */}
+        <div className="flex-shrink-0 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => switchUser(currentUser.role === "host" ? "guest" : "host")}
+            className="hidden lg:block text-xs font-semibold py-1.5 px-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition text-neutral-800 dark:text-neutral-200 cursor-pointer"
+          >
+            {currentUser.role === "host" ? "Host Mode" : "Become a host"}
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            title="Toggle Dark Mode"
+            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition text-neutral-800 dark:text-neutral-200 cursor-pointer"
+          >
+            {theme === "light" ? "🌙" : "☀️"}
+          </button>
+
+          {/* User Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="flex items-center gap-2 border border-gray-300 dark:border-neutral-700 rounded-full py-1 px-2.5 hover:shadow-md transition cursor-pointer bg-white dark:bg-[#222]"
+            >
+              <svg
+                viewBox="0 0 32 32"
+                className="w-3.5 h-3.5 fill-none stroke-current stroke-[3px] text-neutral-700 dark:text-neutral-300"
+              >
+                <path d="M2 16h28M2 6h28M2 26h28" />
+              </svg>
+              <div className="w-6 h-6 rounded-full overflow-hidden border border-gray-200 dark:border-neutral-600 relative">
+                <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" />
+              </div>
+            </button>
+
+            {isMenuOpen && (
+              <div className="absolute right-0 top-10 w-60 bg-white dark:bg-[#222] rounded-2xl shadow-2xl border border-gray-100 dark:border-neutral-700 py-2 z-50 flex flex-col">
+                <div className="px-4 py-2.5 border-b border-gray-100 dark:border-neutral-800 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">Active Role</span>
+                  <div className="flex bg-neutral-200 dark:bg-neutral-700 rounded-lg p-0.5 text-[11px] font-bold">
+                    <button
+                      onClick={() => switchUser("guest")}
+                      className={`px-2 py-0.5 rounded transition ${currentUser.role === "guest" ? "bg-white dark:bg-[#181818] text-black dark:text-white" : "text-neutral-500"}`}
+                    >
+                      Guest
+                    </button>
+                    <button
+                      onClick={() => switchUser("host")}
+                      className={`px-2 py-0.5 rounded transition ${currentUser.role === "host" ? "bg-[#FF385C] text-white" : "text-neutral-500"}`}
+                    >
+                      Host
+                    </button>
+                  </div>
+                </div>
+
+                <Link
+                  href="/messages"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="px-4 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition"
+                >
+                  Messages
+                </Link>
+
+                <Link
+                  href="/wishlists"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="px-4 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition"
+                >
+                  Wishlists
+                </Link>
+
+                <Link
+                  href="/trips"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="px-4 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition"
+                >
+                  My Trips
+                </Link>
+
+                {currentUser.role === "host" && (
+                  <Link
+                    href="/host"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="px-4 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition"
+                  >
+                    Manage Listings (Host)
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
-        </nav>
+        </div>
+
       </div>
     </header>
+  );
+}
+
+export default function Header() {
+  return (
+    <Suspense fallback={<div className="h-[64px] bg-white dark:bg-[#181818] border-b border-gray-200 dark:border-neutral-800" />}>
+      <HeaderContent />
+    </Suspense>
   );
 }

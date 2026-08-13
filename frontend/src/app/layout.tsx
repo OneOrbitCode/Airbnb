@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/components/AuthContext";
 
 export const metadata: Metadata = {
-  title: "Airbnb Clone | Holiday rentals, cabins, beach houses & more",
-  description: "Get an Airbnb clone for every kind of trip.",
+  title: "Airbnb | Holiday rentals, cabins, beach houses & more",
+  description: "Replication of Airbnb marketplace with full booking workflows, dark mode, interactive maps, reviews, and host management.",
 };
 
 export default function RootLayout({
@@ -12,11 +14,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="ltr" data-is-hyperloop="true" data-is-async-local-storage="true" className="scrollbar-gutter dir native vz2oe5x vyb6402">
-      <head>
-        <link rel="stylesheet" href="https://a0.muscache.com/airbnb/static/packages/web/common/frontend/core-guest-spa/entrypoints/client.2692723724.css" type="text/css" crossOrigin="anonymous" media="all" data-linaria-css-swap="true" />
-      </head>
-      <body className="min-h-full flex flex-col with-new-header">{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-white dark:bg-[#121212] text-[#222222] dark:text-[#f7f7f7] min-h-screen flex flex-col antialiased transition-colors duration-200">
+        <AuthProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }
