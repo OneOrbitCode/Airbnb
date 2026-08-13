@@ -13,16 +13,22 @@ interface ListingPin {
   rating?: number;
   latitude?: number;
   longitude?: number;
+  property_type?: string;
 }
 
 interface ListingMapProps {
   listings: ListingPin[];
+  categoryTitle?: string;
 }
 
 const LOCATION_COORDINATES: Record<string, [number, number]> = {
   varanasi: [25.3176, 82.9739],
   bhelupura: [25.2980, 82.9930],
   assi: [25.2890, 83.0060],
+  noida: [28.5355, 77.3910],
+  "greater noida": [28.4744, 77.5040],
+  delhi: [28.6139, 77.2090],
+  mumbai: [19.0760, 72.8777],
   jaipur: [26.9124, 75.7873],
   udaipur: [24.5764, 73.6800],
   jodhpur: [26.2978, 73.0185],
@@ -34,6 +40,7 @@ const LOCATION_COORDINATES: Record<string, [number, number]> = {
   kasauli: [30.9013, 76.9649],
   goa: [15.4989, 73.8278],
   anjuna: [15.5800, 73.7400],
+  candolim: [15.5180, 73.7660],
   wayanad: [11.6854, 76.1320],
   munnar: [10.0889, 77.0595],
   alibaug: [18.6414, 72.8722],
@@ -48,19 +55,21 @@ function getListingLatLng(listing: ListingPin, index: number): [number, number] 
   const loc = (listing.location || "").toLowerCase();
   for (const [key, coords] of Object.entries(LOCATION_COORDINATES)) {
     if (loc.includes(key)) {
-      return [coords[0] + (index % 3) * 0.008 - 0.004, coords[1] + (index % 2) * 0.008 - 0.004];
+      return [coords[0] + (index % 3) * 0.006 - 0.003, coords[1] + (index % 2) * 0.006 - 0.003];
     }
   }
   return [20.5937 + (index % 4) * 1.5, 78.9629 + (index % 3) * 1.5];
 }
 
-export default function ListingMap({ listings }: ListingMapProps) {
+export default function ListingMap({ listings, categoryTitle }: ListingMapProps) {
   const router = useRouter();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersLayerRef = useRef<any>(null);
+  const tileLayerRef = useRef<any>(null);
   const { theme } = useTheme();
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
 
   // Expose navigation to window for Leaflet DOM clicks
   useEffect(() => {
@@ -69,7 +78,7 @@ export default function ListingMap({ listings }: ListingMapProps) {
     };
   }, [router]);
 
-  // Dynamically load Leaflet library and CSS from CDN
+  // Load Leaflet assets
   useEffect(() => {
     if (!document.getElementById("leaflet-css")) {
       const link = document.createElement("link");
@@ -92,10 +101,9 @@ export default function ListingMap({ listings }: ListingMapProps) {
     }
   }, []);
 
-  // Initialize base Leaflet map once
+  // Initialize base Leaflet map once only
   useEffect(() => {
     if (!mapLoaded || !mapContainerRef.current || !(window as any).L) return;
-
     const L = (window as any).L;
 
     if (!mapInstanceRef.current) {
@@ -104,36 +112,61 @@ export default function ListingMap({ listings }: ListingMapProps) {
         scrollWheelZoom: true,
       }).setView([22.5937, 78.9629], 5);
 
-      mapInstanceRef.current = map;
-      markersLayerRef.current = L.featureGroup().addTo(map);
+      const isDark = theme === "dark";
+      const tileUrl = isDark
+        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
-      // Trigger invalidateSize after initial render
+      const tileLayer = L.tileLayer(tileUrl, {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 19,
+      }).addTo(map);
+
+      tileLayerRef.current = tileLayer;
+      markersLayerRef.current = L.featureGroup().addTo(map);
+      mapInstanceRef.current = map;
+
+      // Force instant resize calculation
       setTimeout(() => {
-        map.invalidateSize();
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+          setMapReady(true);
+        }
       }, 150);
     }
 
-    // Tile Layer: CartoDB Voyager (Light) or Dark Matter (Dark)
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        markersLayerRef.current = null;
+        tileLayerRef.current = null;
+        setMapReady(false);
+      }
+    };
+  }, [mapLoaded, theme]);
+
+  // Seamless Tile Theme Switcher (Light <-> Dark mode)
+  useEffect(() => {
+    if (!mapInstanceRef.current || !(window as any).L || !tileLayerRef.current) return;
+    
     const isDark = theme === "dark";
-    const tileUrl = isDark
+    const newTileUrl = isDark
       ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
 
-    if (mapInstanceRef.current._tileLayer) {
-      mapInstanceRef.current.removeLayer(mapInstanceRef.current._tileLayer);
-    }
+    tileLayerRef.current.setUrl(newTileUrl);
 
-    const tileLayer = L.tileLayer(tileUrl, {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: "abcd",
-      maxZoom: 19,
-    }).addTo(mapInstanceRef.current);
+    // Invalidate size immediately so no tiles stay blank or grey
+    setTimeout(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    }, 50);
+  }, [theme]);
 
-    mapInstanceRef.current._tileLayer = tileLayer;
-
-  }, [mapLoaded, theme]);
-
-  // Update markers and auto-fit bounds whenever `listings` changes (e.g. category switch or filter)
+  // Update Markers & Auto-fit Bounds whenever listings or theme changes
   useEffect(() => {
     if (!mapInstanceRef.current || !(window as any).L || !markersLayerRef.current) return;
 
@@ -142,16 +175,17 @@ export default function ListingMap({ listings }: ListingMapProps) {
     const layer = markersLayerRef.current;
     const isDark = theme === "dark";
 
-    // Clear previous category markers
+    // Clear previous markers
     layer.clearLayers();
 
-    if (listings.length === 0) return;
+    if (!listings || listings.length === 0) return;
 
-    // Plot all listings of the current section / category
+    // Plot listings
     listings.forEach((listing, index) => {
       const [lat, lng] = getListingLatLng(listing, index);
-      const priceText = listing.price_per_night ? `₹${listing.price_per_night}` : `₹${listing.price}`;
-      const shortTitle = listing.title.length > 20 ? listing.title.slice(0, 18) + "..." : listing.title;
+      const priceText = listing.price_per_night ? `₹${listing.price_per_night.toLocaleString("en-IN")}` : `₹${listing.price}`;
+      const title = listing.title || listing.location;
+      const shortTitle = title.length > 20 ? title.slice(0, 18) + "..." : title;
 
       const customIcon = L.divIcon({
         className: "custom-airbnb-marker",
@@ -209,7 +243,7 @@ export default function ListingMap({ listings }: ListingMapProps) {
             <img 
               referrerpolicy="no-referrer"
               src="${listing.imageSrc}" 
-              alt="${listing.title}"
+              alt="${title}"
               style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;" 
               onmouseover="this.style.transform='scale(1.06)'"
               onmouseout="this.style.transform='scale(1)'"
@@ -220,7 +254,7 @@ export default function ListingMap({ listings }: ListingMapProps) {
           </div>
           <div style="padding: 10px 12px 10px 12px;">
             <div style="font-weight: 700; font-size: 13px; line-height: 1.3; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-              ${listing.title}
+              ${title}
             </div>
             <div style="font-size: 11px; color: ${isDark ? '#aaaaaa' : '#717171'}; margin-bottom: 6px;">
               ${listing.location}
@@ -259,24 +293,35 @@ export default function ListingMap({ listings }: ListingMapProps) {
       layer.addLayer(marker);
     });
 
-    // Auto-fit bounds so ALL hotels of this section/page are visible at one time
+    // Auto-fit bounds so ALL hotels of this section/category are visible
     const bounds = layer.getBounds();
     if (bounds.isValid()) {
       map.fitBounds(bounds, {
         padding: [60, 60],
-        maxZoom: listings.length === 1 ? 12 : 14,
+        maxZoom: listings.length === 1 ? 13 : 14,
         animate: true,
       });
     }
 
     setTimeout(() => {
-      map.invalidateSize();
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
     }, 100);
 
-  }, [listings, theme, router]);
+  }, [listings, theme, router, mapReady]);
 
   return (
-    <div className="relative w-full h-[calc(100vh-170px)] min-h-[550px] rounded-2xl overflow-hidden shadow-md border border-gray-200 dark:border-neutral-800">
+    <div className="relative w-full h-[calc(100vh-140px)] min-h-[520px] rounded-2xl overflow-hidden shadow-md border border-gray-200 dark:border-neutral-800">
+      
+      {/* Category / Section Floating Banner */}
+      <div className="absolute top-4 left-4 z-20 bg-white/95 dark:bg-[#1e1e1e]/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg border border-gray-200 dark:border-neutral-700 flex items-center gap-2 text-xs font-semibold text-neutral-900 dark:text-white">
+        <span className="w-2.5 h-2.5 rounded-full bg-[#FF385C] animate-pulse" />
+        <span>
+          Showing {listings.length} {listings.length === 1 ? "stay" : "stays"} on Map {categoryTitle ? `(${categoryTitle})` : ""}
+        </span>
+      </div>
+
       <style jsx global>{`
         .airbnb-hover-popup .leaflet-popup-content-wrapper {
           background: transparent !important;
@@ -297,14 +342,14 @@ export default function ListingMap({ listings }: ListingMapProps) {
       <div 
         ref={mapContainerRef} 
         className="w-full h-full z-10" 
-        style={{ minHeight: "550px" }}
+        style={{ minHeight: "520px" }}
       />
       
       {!mapLoaded && (
         <div className="absolute inset-0 bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center z-20">
           <div className="flex flex-col items-center gap-3">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#FF385C]"></div>
-            <span className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">Loading Map for this category...</span>
+            <span className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">Loading Map...</span>
           </div>
         </div>
       )}

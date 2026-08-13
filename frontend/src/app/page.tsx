@@ -249,14 +249,17 @@ function CityCarouselRow({ title, listings }: { title: string; listings: any[] }
       
       {/* City Section Header matching screenshot (Title + Right Arrow + Carousel Nav) */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 group cursor-pointer">
+        <a 
+          href={title.includes("Varanasi") ? "/?location=Varanasi" : title.includes("Noida") ? "/?location=Noida" : title.includes("Jaipur") ? "/?location=Jaipur" : title.includes("Goa") ? "/?location=Goa" : title.includes("Manali") ? "/?location=Manali" : title.includes("Lonavala") ? "/?location=Lonavala" : title.includes("Wayanad") ? "/?location=Wayanad" : "#"}
+          className="flex items-center gap-1.5 group cursor-pointer no-underline"
+        >
           <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white group-hover:underline">
             {title}
           </h2>
-          <svg viewBox="0 0 32 32" className="w-3.5 h-3.5 fill-none stroke-current stroke-[3.5px] text-neutral-900 dark:text-white transition-transform group-hover:translate-x-0.5">
+          <svg viewBox="0 0 32 32" className="w-3.5 h-3.5 fill-none stroke-current stroke-[3.5px] text-neutral-900 dark:text-white transition-transform group-hover:translate-x-1">
             <path d="M12 4l12 12-12 12" />
           </svg>
-        </div>
+        </a>
 
         {/* Carousel Nav Arrows */}
         <div className="hidden sm:flex items-center gap-1.5">
@@ -408,7 +411,7 @@ function HomeContent() {
           ) : showMap ? (
             /* Interactive Map View */
             <div className="animate-in fade-in duration-300">
-              <ListingMap listings={allListings} />
+              <ListingMap listings={allListings} categoryTitle={category || location || undefined} />
             </div>
           ) : allListings.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-neutral-500 dark:text-neutral-400 gap-2">
