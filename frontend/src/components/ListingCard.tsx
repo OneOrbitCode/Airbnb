@@ -76,7 +76,7 @@ export default function ListingCard({
   const formattedPrice = typeof price === "number" ? price.toLocaleString("en-IN") : String(price).replace(/₹/g, "");
 
   return (
-    <div className="group flex flex-col gap-1.5 cursor-pointer w-full">
+    <div className="group flex flex-col gap-1.5 cursor-pointer w-full select-none">
       
       {/* Square Rounded Photo with Badges and Wishlist */}
       <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800 shadow-xs">
@@ -105,8 +105,8 @@ export default function ListingCard({
 
         {/* Guest Favorite Badge */}
         {guestFavorite && (
-          <div className="absolute top-2.5 left-2.5 z-10">
-            <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xs px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-neutral-900 dark:text-white shadow-xs border border-black/5 dark:border-white/10">
+          <div className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 z-10">
+            <div className="bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xs px-2 py-0.5 sm:px-2.5 rounded-full text-[9px] sm:text-[10px] font-semibold text-neutral-900 dark:text-white shadow-xs border border-black/5 dark:border-white/10 whitespace-nowrap">
               Guest favourite
             </div>
           </div>
@@ -116,14 +116,14 @@ export default function ListingCard({
         <button
           type="button"
           onClick={toggleWishlist}
-          className="absolute top-2 right-2 p-1.5 transition duration-200 hover:scale-115 active:scale-90 z-10 cursor-pointer"
+          className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 p-1.5 transition duration-200 hover:scale-115 active:scale-90 z-10 cursor-pointer"
           aria-label={isLiked ? "Remove from wishlist" : "Add to wishlist"}
           title={isLiked ? "Saved in wishlist" : "Save to wishlist"}
         >
           <svg
             viewBox="0 0 32 32"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-5 h-5 transition-all duration-200"
+            className="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-200"
             style={{
               fill: isLiked ? "#FF385C" : "rgba(0, 0, 0, 0.4)",
               stroke: "#ffffff",
@@ -138,11 +138,11 @@ export default function ListingCard({
 
       {/* Info Details matching Airbnb screenshot: Line 1 Title, Line 2 Price for 2 nights · ★ rating */}
       <div className="flex flex-col text-xs leading-tight">
-        <div className="font-semibold text-neutral-900 dark:text-white truncate">
+        <div className="font-semibold text-neutral-900 dark:text-white truncate text-[11px] sm:text-xs">
           {location.startsWith("Flat") || location.startsWith("Home") || location.startsWith("Room") ? location : `Flat in ${location.split(",")[0]}`}
         </div>
         
-        <div className="text-[11px] text-neutral-600 dark:text-neutral-400 font-normal truncate mt-0.5 flex items-center gap-1">
+        <div className="text-[10px] sm:text-[11px] text-neutral-600 dark:text-neutral-400 font-normal truncate mt-0.5 flex items-center gap-1">
           <span>₹{formattedPrice} for 2 nights</span>
           <span>·</span>
           <span className="flex items-center gap-0.5">

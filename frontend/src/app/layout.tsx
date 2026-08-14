@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/AuthContext";
@@ -6,6 +6,12 @@ import { AuthProvider } from "@/components/AuthContext";
 export const metadata: Metadata = {
   title: "Airbnb | Holiday rentals, cabins, beach houses & more",
   description: "Replication of Airbnb marketplace with full booking workflows, dark mode, interactive maps, reviews, and host management.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({

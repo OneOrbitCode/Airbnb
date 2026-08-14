@@ -239,7 +239,7 @@ function CityCarouselRow({ title, listings }: { title: string; listings: any[] }
 
   const scroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
-      const scrollAmount = direction === "left" ? -420 : 420;
+      const scrollAmount = direction === "left" ? -350 : 350;
       scrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
   };
@@ -248,15 +248,15 @@ function CityCarouselRow({ title, listings }: { title: string; listings: any[] }
     <div className="flex flex-col gap-2 py-1">
       
       {/* City Section Header matching screenshot (Title + Right Arrow + Carousel Nav) */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-0.5 sm:px-0">
         <a 
           href={title.includes("Varanasi") ? "/?location=Varanasi" : title.includes("Noida") ? "/?location=Noida" : title.includes("Jaipur") ? "/?location=Jaipur" : title.includes("Goa") ? "/?location=Goa" : title.includes("Manali") ? "/?location=Manali" : title.includes("Lonavala") ? "/?location=Lonavala" : title.includes("Wayanad") ? "/?location=Wayanad" : "#"}
-          className="flex items-center gap-1.5 group cursor-pointer no-underline"
+          className="flex items-center gap-1 sm:gap-1.5 group cursor-pointer no-underline"
         >
-          <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white group-hover:underline">
+          <h2 className="text-sm sm:text-base md:text-lg font-bold text-neutral-900 dark:text-white group-hover:underline">
             {title}
           </h2>
-          <svg viewBox="0 0 32 32" className="w-3.5 h-3.5 fill-none stroke-current stroke-[3.5px] text-neutral-900 dark:text-white transition-transform group-hover:translate-x-1">
+          <svg viewBox="0 0 32 32" className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-none stroke-current stroke-[3.5px] text-neutral-900 dark:text-white transition-transform group-hover:translate-x-1">
             <path d="M12 4l12 12-12 12" />
           </svg>
         </a>
@@ -283,12 +283,12 @@ function CityCarouselRow({ title, listings }: { title: string; listings: any[] }
       {/* Horizontal Scrollable Row (Small compact cards matching screenshot) */}
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x pb-2 pt-0.5"
+        className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar scroll-smooth snap-x pb-2 pt-0.5 touch-pan-x"
       >
         {listings.map((listing) => (
           <div
             key={listing.id}
-            className="w-[165px] sm:w-[185px] md:w-[200px] lg:w-[205px] flex-shrink-0 snap-start"
+            className="w-[155px] min-[400px]:w-[175px] sm:w-[190px] md:w-[200px] lg:w-[205px] flex-shrink-0 snap-start"
           >
             <ListingCard
               id={listing.id}
@@ -403,7 +403,7 @@ function HomeContent() {
       <Categories />
       
       <main id="site-content" className="flex-1 pb-20">
-        <div className="max-w-[2520px] mx-auto px-4 sm:px-6 md:px-10 xl:px-12 pt-3">
+        <div className="max-w-[2520px] mx-auto px-3 sm:px-6 md:px-10 xl:px-12 pt-2 sm:pt-3">
           {loading ? (
             <div className="flex justify-center items-center h-48">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF385C]"></div>
@@ -415,12 +415,12 @@ function HomeContent() {
             </div>
           ) : allListings.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-neutral-500 dark:text-neutral-400 gap-2">
-              <h2 className="text-xl font-semibold text-neutral-800 dark:text-neutral-200">No exact matches</h2>
-              <p className="text-sm">Try changing or removing some of your filters or searching for another destination.</p>
+              <h2 className="text-lg sm:text-xl font-semibold text-neutral-800 dark:text-neutral-200">No exact matches</h2>
+              <p className="text-xs sm:text-sm text-center">Try changing or removing some of your filters or searching for another destination.</p>
             </div>
           ) : (
             /* Horizontal Citywise Rows Layout */
-            <div className="flex flex-col gap-6 animate-in fade-in duration-200">
+            <div className="flex flex-col gap-4 sm:gap-6 animate-in fade-in duration-200">
               {Object.entries(cityGroups).map(([cityName, items]) => (
                 <CityCarouselRow key={cityName} title={cityName} listings={items} />
               ))}
@@ -430,22 +430,22 @@ function HomeContent() {
       </main>
 
       {/* Floating "Show map" / "Show list" Toggle Button (Airbnb Style) */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
+      <div className="fixed bottom-5 sm:bottom-6 left-1/2 transform -translate-x-1/2 z-40">
         <button
           onClick={() => setShowMap(!showMap)}
-          className="flex items-center gap-2.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-5 py-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 font-semibold text-sm cursor-pointer border border-neutral-700/20"
+          className="flex items-center gap-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 font-semibold text-xs sm:text-sm cursor-pointer border border-neutral-700/20"
         >
           {showMap ? (
             <>
               <span>Show list</span>
-              <svg viewBox="0 0 32 32" className="w-4 h-4 fill-none stroke-current stroke-[3px]">
+              <svg viewBox="0 0 32 32" className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-none stroke-current stroke-[3px]">
                 <path d="M4 8h24M4 16h24M4 24h24" />
               </svg>
             </>
           ) : (
             <>
               <span>Show map</span>
-              <svg viewBox="0 0 32 32" className="w-4 h-4 fill-none stroke-current stroke-[2.5px]">
+              <svg viewBox="0 0 32 32" className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-none stroke-current stroke-[2.5px]">
                 <path d="M16 2l9 4.5v20l-9-4.5-9 4.5V6.5L16 2zM7 6.5v20M25 6.5v20M16 2v20" />
               </svg>
             </>

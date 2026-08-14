@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import { useAuth } from "@/components/AuthContext";
+import AirbnbCalendar from "@/components/AirbnbCalendar";
 
 export default function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -32,7 +33,9 @@ export default function ListingDetail({ params }: { params: Promise<{ id: string
   const [adults, setAdults] = useState(1);
   const [childrenCount, setChildrenCount] = useState(0);
   const [infants, setInfants] = useState(0);
+  const [pets, setPets] = useState(0);
   const [isGuestDropdownOpen, setIsGuestDropdownOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const totalGuests = adults + childrenCount;
   const maxGuests = 5;
@@ -243,11 +246,11 @@ export default function ListingDetail({ params }: { params: Promise<{ id: string
   const totalPrice = basePrice + serviceFee;
 
   const getGuestSummaryLabel = () => {
-    let text = `${totalGuests} ${totalGuests === 1 ? "guest" : "guests"}`;
-    if (infants > 0) {
-      text += `, ${infants} ${infants === 1 ? "infant" : "infants"}`;
-    }
-    return text;
+    const parts = [];
+    if (totalGuests > 0) parts.push(`${totalGuests} ${totalGuests === 1 ? "guest" : "guests"}`);
+    if (infants > 0) parts.push(`${infants} ${infants === 1 ? "infant" : "infants"}`);
+    if (pets > 0) parts.push(`${pets} ${pets === 1 ? "pet" : "pets"}`);
+    return parts.join(", ") || "1 guest";
   };
 
   return (
@@ -441,7 +444,7 @@ export default function ListingDetail({ params }: { params: Promise<{ id: string
             </div>
 
             {/* Reviews Section with Leave Review Trigger */}
-            <div className="pt-2">
+            <div className="pt-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-bold text-neutral-900 dark:text-white">
@@ -509,48 +512,59 @@ export default function ListingDetail({ params }: { params: Promise<{ id: string
               
               {/* Date & Interactive Guest Selector Box */}
               <div className="border border-gray-300 dark:border-neutral-700 rounded-xl flex flex-col mt-1 bg-white dark:bg-[#252525] shadow-xs relative">
-                <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-300 dark:divide-neutral-700 border-b border-gray-300 dark:border-neutral-700 rounded-t-xl overflow-hidden">
+                <div className="grid grid-cols-2 divide-x divide-gray-300 dark:divide-neutral-700 border-b border-gray-300 dark:border-neutral-700 rounded-t-xl overflow-hidden">
                   
-                  {/* Check-In Input */}
+                  {/* Check-In Custom Box */}
                   <div 
-                    onClick={(e) => {
-                      const inp = e.currentTarget.querySelector('input');
-                      if (inp && 'showPicker' in inp) {
-                        try { (inp as any).showPicker(); } catch {}
-                      }
+                    onClick={() => {
+                      setIsCalendarOpen(!isCalendarOpen);
+                      setIsGuestDropdownOpen(false);
                     }}
-                    className="p-3 flex flex-col justify-center bg-white dark:bg-[#252525] hover:bg-neutral-50 dark:hover:bg-[#2d2d2d] transition cursor-pointer relative focus-within:ring-2 focus-within:ring-black"
+                    className={`p-3 flex flex-col justify-center transition cursor-pointer relative ${
+                      isCalendarOpen ? "bg-neutral-100 dark:bg-[#2d2d2d]" : "bg-white dark:bg-[#252525] hover:bg-neutral-50 dark:hover:bg-[#2d2d2d]"
+                    }`}
                   >
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-300 mb-0.5">Check-in</label>
-                    <input 
-                      type="date"
-                      min={getTodayDate()}
-                      className="outline-none text-sm font-semibold w-full text-neutral-800 dark:text-white cursor-pointer bg-transparent"
-                      value={dates.checkIn}
-                      onChange={(e) => setDates({ ...dates, checkIn: e.target.value })}
-                    />
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-300 mb-0.5 cursor-pointer">Check-in</label>
+                    <span className="text-xs sm:text-sm font-semibold text-neutral-900 dark:text-white truncate">
+                      {dates.checkIn ? dates.checkIn : "Add date"}
+                    </span>
                   </div>
 
-                  {/* Checkout Input */}
+                  {/* Checkout Custom Box */}
                   <div 
-                    onClick={(e) => {
-                      const inp = e.currentTarget.querySelector('input');
-                      if (inp && 'showPicker' in inp) {
-                        try { (inp as any).showPicker(); } catch {}
-                      }
+                    onClick={() => {
+                      setIsCalendarOpen(!isCalendarOpen);
+                      setIsGuestDropdownOpen(false);
                     }}
-                    className="p-3 flex flex-col justify-center bg-white dark:bg-[#252525] hover:bg-neutral-50 dark:hover:bg-[#2d2d2d] transition cursor-pointer relative focus-within:ring-2 focus-within:ring-black"
+                    className={`p-3 flex flex-col justify-center transition cursor-pointer relative ${
+                      isCalendarOpen ? "bg-neutral-100 dark:bg-[#2d2d2d]" : "bg-white dark:bg-[#252525] hover:bg-neutral-50 dark:hover:bg-[#2d2d2d]"
+                    }`}
                   >
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-300 mb-0.5">Checkout</label>
-                    <input 
-                      type="date"
-                      min={dates.checkIn || getTodayDate()}
-                      className="outline-none text-sm font-semibold w-full text-neutral-800 dark:text-white cursor-pointer bg-transparent"
-                      value={dates.checkOut}
-                      onChange={(e) => setDates({ ...dates, checkOut: e.target.value })}
-                    />
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-300 mb-0.5 cursor-pointer">Checkout</label>
+                    <span className="text-xs sm:text-sm font-semibold text-neutral-900 dark:text-white truncate">
+                      {dates.checkOut ? dates.checkOut : "Add date"}
+                    </span>
                   </div>
                 </div>
+
+                {/* Floating Airbnb Theme Calendar Dropdown Window */}
+                {isCalendarOpen && (
+                  <div className="absolute top-full right-0 mt-2 z-50 w-[320px] sm:w-[580px] animate-in fade-in zoom-in-95 duration-150">
+                    <AirbnbCalendar
+                      checkIn={dates.checkIn}
+                      checkOut={dates.checkOut}
+                      onChange={(inDate, outDate) => {
+                        setDates({ checkIn: inDate, checkOut: outDate });
+                        if (inDate && outDate) {
+                          setIsCalendarOpen(false);
+                        }
+                      }}
+                      numberOfMonths={2}
+                      minDate={getTodayDate()}
+                      onClose={() => setIsCalendarOpen(false)}
+                    />
+                  </div>
+                )}
 
                 {/* Interactive Guests Trigger */}
                 <div 
@@ -640,7 +654,7 @@ export default function ListingDetail({ params }: { params: Promise<{ id: string
                     </div>
 
                     {/* Infants */}
-                    <div className="flex items-center justify-between pb-2">
+                    <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-neutral-700">
                       <div>
                         <div className="font-semibold text-sm text-neutral-900 dark:text-white">Infants</div>
                         <div className="text-xs text-neutral-500 font-light">Under 2</div>
@@ -672,8 +686,41 @@ export default function ListingDetail({ params }: { params: Promise<{ id: string
                       </div>
                     </div>
 
+                    {/* Pets */}
+                    <div className="flex items-center justify-between pb-2">
+                      <div>
+                        <div className="font-semibold text-sm text-neutral-900 dark:text-white">Pets</div>
+                        <div className="text-xs text-neutral-500 font-light">Bringing a service animal?</div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          disabled={pets <= 0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPets(Math.max(0, pets - 1));
+                          }}
+                          className="w-8 h-8 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-base text-neutral-700 dark:text-neutral-200 hover:border-black dark:hover:border-white disabled:opacity-30 cursor-pointer"
+                        >
+                          –
+                        </button>
+                        <span className="w-5 text-center font-semibold text-sm text-neutral-900 dark:text-white">{pets}</span>
+                        <button
+                          type="button"
+                          disabled={pets >= 3}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPets(pets + 1);
+                          }}
+                          className="w-8 h-8 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-base text-neutral-700 dark:text-neutral-200 hover:border-black dark:hover:border-white disabled:opacity-30 cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
                     <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-light">
-                      This place has a maximum of {maxGuests} guests, not including infants.
+                      This place has a maximum of {maxGuests} guests, not including infants or pets.
                     </p>
 
                     <div className="flex justify-end pt-1">
@@ -987,6 +1034,152 @@ export default function ListingDetail({ params }: { params: Promise<{ id: string
                 Got it
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Dates & Guests Bottom Sheet Drawer */}
+      {isMobileDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#1e1e1e] w-full max-w-lg rounded-t-3xl p-5 shadow-2xl border-t border-gray-200 dark:border-neutral-700 flex flex-col gap-4 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-neutral-800 pb-3">
+              <div>
+                <h3 className="font-bold text-base text-neutral-900 dark:text-white">Choose Dates</h3>
+                <p className="text-xs text-neutral-500">{nights} nights selected · ₹{pricePerNight}/night</p>
+              </div>
+              <button
+                onClick={() => setIsMobileDrawerOpen(false)}
+                className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center font-bold text-neutral-700 dark:text-neutral-300 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <AirbnbCalendar
+              checkIn={dates.checkIn}
+              checkOut={dates.checkOut}
+              onChange={(inDate, outDate) => setDates({ checkIn: inDate, checkOut: outDate })}
+              numberOfMonths={1}
+              minDate={getTodayDate()}
+            />
+
+            {/* Guest Selector in Mobile Sheet: Adults, Children, Infants, Pets */}
+            <div className="flex flex-col gap-2.5 p-3.5 rounded-2xl bg-neutral-50 dark:bg-[#252525] border border-gray-200 dark:border-neutral-700">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-200/60 dark:border-neutral-700">
+                <div>
+                  <div className="text-xs font-bold text-neutral-900 dark:text-white">Adults</div>
+                  <div className="text-[10px] text-neutral-500">Age 13+</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={adults <= 1}
+                    onClick={() => setAdults(Math.max(1, adults - 1))}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="text-xs font-bold w-4 text-center text-neutral-900 dark:text-white">{adults}</span>
+                  <button
+                    type="button"
+                    disabled={totalGuests >= maxGuests}
+                    onClick={() => setAdults(adults + 1)}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pb-2 border-b border-gray-200/60 dark:border-neutral-700">
+                <div>
+                  <div className="text-xs font-bold text-neutral-900 dark:text-white">Children</div>
+                  <div className="text-[10px] text-neutral-500">Ages 2–12</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={childrenCount <= 0}
+                    onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="text-xs font-bold w-4 text-center text-neutral-900 dark:text-white">{childrenCount}</span>
+                  <button
+                    type="button"
+                    disabled={totalGuests >= maxGuests}
+                    onClick={() => setChildrenCount(childrenCount + 1)}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pb-2 border-b border-gray-200/60 dark:border-neutral-700">
+                <div>
+                  <div className="text-xs font-bold text-neutral-900 dark:text-white">Infants</div>
+                  <div className="text-[10px] text-neutral-500">Under 2</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={infants <= 0}
+                    onClick={() => setInfants(Math.max(0, infants - 1))}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="text-xs font-bold w-4 text-center text-neutral-900 dark:text-white">{infants}</span>
+                  <button
+                    type="button"
+                    disabled={infants >= 3}
+                    onClick={() => setInfants(infants + 1)}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold text-neutral-900 dark:text-white">Pets</div>
+                  <div className="text-[10px] text-neutral-500">Service animals welcome</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={pets <= 0}
+                    onClick={() => setPets(Math.max(0, pets - 1))}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="text-xs font-bold w-4 text-center text-neutral-900 dark:text-white">{pets}</span>
+                  <button
+                    type="button"
+                    disabled={pets >= 3}
+                    onClick={() => setPets(pets + 1)}
+                    className="w-7 h-7 rounded-full border border-gray-300 dark:border-neutral-600 flex items-center justify-center font-bold text-xs disabled:opacity-30 cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileDrawerOpen(false);
+                handleOpenCheckout();
+              }}
+              className="w-full bg-[#FF385C] hover:bg-[#E00B41] text-white font-bold text-sm py-3.5 rounded-2xl shadow-lg cursor-pointer"
+            >
+              Reserve for ₹{totalPrice}
+            </button>
           </div>
         </div>
       )}
